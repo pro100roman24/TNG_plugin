@@ -10,7 +10,7 @@ namespace TNG_plugin
     class Plugin
     {
         public const string Name = @"TNG_plugin";
-        public const string Version = "1.1";
+        public const string Version = "1.4";
         public static Config Params
         {
             get

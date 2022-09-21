@@ -23,8 +23,8 @@ namespace RequestsTNG
     {
         public string Name { get; set; }
         public string LastName { get; set; }
-        public int ProfileID { get; set; }
-        public int CardNumber { get; set; }
+        public string ProfileID { get; set; }
+        public string CardNumber { get; set; }
         public double Balance { get; set; }
         public string Error { get; set; }
     }
@@ -63,7 +63,21 @@ namespace RequestsTNG
 
                 Plugin.Log_Info($"Тело запроса:\n {body}", Plugin.Params.ShowFullLogs);
 
-                var Response = Request.Post(Config.Instance.TNGurl, body, "application/json");
+                var Response = Request.Post(Config.Instance.TNGurl, body, "application/json").ToString();
+
+                //var tngresp = new Envelope();
+
+                //XmlSerializer serializer = new XmlSerializer(typeof(Envelope));
+                //using (StringReader reader = new StringReader(Response))
+                //{
+                //    tngresp = (Envelope)serializer.Deserialize(reader);
+                //}
+
+                //Plugin.Log_Info($"FirstName = {tngresp.Body.FetchProfileResponse.PersonName.FirstName} " +
+                //    $"LastName = {tngresp.Body.FetchProfileResponse.PersonName.LastName}" +
+                //    $"ProfileID = {tngresp.Body.FetchProfileResponse.ProfileID}" +
+                //    $"Number = {tngresp.Body.FetchProfileResponse.Cards.CardInfoList.Number}" +
+                //    $"Balance = {tngresp.Body.FetchProfileResponse.Accounts.AccountInfoList.First(x => x.Name == Config.Instance.AccountName).Balance}", Plugin.Params.ShowFullLogs);
 
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.LoadXml(Response.ToString());
@@ -88,7 +102,7 @@ namespace RequestsTNG
 
                                 if (cchildnode.Name == "ProfileID")
                                 {
-                                    guest.ProfileID = Int32.Parse(cchildnode.InnerText);
+                                    guest.ProfileID = cchildnode.InnerText;
                                 }
 
                                 if (cchildnode.Name == "PersonName")
@@ -139,7 +153,7 @@ namespace RequestsTNG
                                             {
                                                 if (cchildnode2.Name == "ns4:Number")
                                                 {
-                                                    guest.CardNumber = Int32.Parse(cchildnode2.InnerText);
+                                                    guest.CardNumber = cchildnode2.InnerText;
                                                 }
                                             }
                                         }
@@ -178,19 +192,22 @@ namespace RequestsTNG
                 var os = PluginContext.Operations;
                 var card = os.TryGetOrderExternalDataByKey(order, "Card");
 
+
                 string body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                     "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns5=\"http://club.lassd.hrs.ru/ws\" xmlns:ns2=\"http://htng.org/PWS/2008A/SingleGuestItinerary/Common/Types\"" +
                     " xmlns:ns4=\"http://www.hrs.ru/clubng/ws/common/types\" xmlns:ns3=\"http://htng.org/PWS/2008A/SingleGuestItinerary/Name/Types\">" +
                     "<soapenv:Header />" +
                     "<soapenv:Body>" +
                     "<ns5:PostPaymentRequest>" +
-                    $"<Number>{card}</Number>" +
+                    $"<VoidFlag>{!typeoperation}</VoidFlag>" +
+                    $"<Number>MSW:{card}</Number>" +
                     $"<PostPropertyId>{Config.Instance.PostPropertyId}</PostPropertyId>" +
                     $"<RegisterId source=\"\">{Config.Instance.WorkstationID}</RegisterId>" +
                     $"<RevenueCenterId>{Config.Instance.RevenueCenterId}</RevenueCenterId>" +
                     $"<PaymentAmount>{возврат}{order.ResultSum.ToString().Replace(",", ".")}</PaymentAmount>" +
                     $"<CheckNumber>{order.Number}</CheckNumber>" +
                     $"<CashierEmpName>{order.Waiter.Name}</CashierEmpName>" +
+                    $"<CashierOptMask>ATTACH:{Config.Instance.PostPropertyId}:{Config.Instance.pos_rvc}</CashierOptMask>" +
                     $"<CheckGuestCount>{order.Guests.Count}</CheckGuestCount>" +
                     "<menuItemList>";
 
@@ -215,7 +232,7 @@ namespace RequestsTNG
                 }
 
                 body += "</menuItemList>" +
-                    "<Confirm>true</Confirm>" +
+                    "<Confirm>false</Confirm>" +
                     "</ns5:PostPaymentRequest>" +
                     "</soapenv:Body>" +
                     "</soapenv:Envelope>";

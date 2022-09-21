@@ -30,6 +30,7 @@ namespace TNG_plugin
         public string TNGurl { get; set; }
         public int PostPropertyId { get; set; }
         public int RevenueCenterId { get; set; }
+        public int pos_rvc { get; set; }
         public string WorkstationID { get; set; }
         public string AccountName { get; set; }
         public bool ShowFullLogs { get; set; }
@@ -38,6 +39,7 @@ namespace TNG_plugin
             TNGurl = "http://api.tng3.ru:8080/ws";
             PostPropertyId = 1001;
             RevenueCenterId = 001;
+            pos_rvc = 1;
             WorkstationID = "5";
             AccountName = "Deposit account";
             ShowFullLogs = true;
